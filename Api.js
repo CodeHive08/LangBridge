@@ -3,7 +3,10 @@ const app = express()
 const bodyP = require("body-parser")
 const compiler = require("compilex")
 const path = require("path")
-const options = { stats: true }
+const options = { 
+    stats: true,
+    tempDir: path.join(__dirname, 'temp')
+}
 compiler.init(options)
 app.use(bodyP.json())
 app.use("/codemirror", express.static(path.join(__dirname, "codemirror")))
@@ -34,7 +37,14 @@ app.post("/compile", function (req, res) {
     try {
         if (lang == "Cpp") {
             if (!input) {
-                var envData = { OS: "linux", cmd: "g++", options: { timeout: 10000 } };
+                var envData = { 
+                    OS: "linux", 
+                    cmd: "g++",
+                    options: { 
+                        timeout: 10000,
+                        compileTimeout: 5000
+                    }
+                };
                 compiler.compileCPP(envData, code, function (data) {
                     if (data.error) {
                         console.log("C++ Compilation Error:", data.error);
@@ -46,7 +56,14 @@ app.post("/compile", function (req, res) {
                     }
                 });
             } else {
-                var envData = { OS: "linux", cmd: "g++", options: { timeout: 10000 } };
+                var envData = { 
+                    OS: "linux", 
+                    cmd: "g++",
+                    options: { 
+                        timeout: 10000,
+                        compileTimeout: 5000
+                    }
+                };
                 compiler.compileCPPWithInput(envData, code, input, function (data) {
                     if (data.error) {
                         console.log("C++ Compilation Error:", data.error);
@@ -60,7 +77,13 @@ app.post("/compile", function (req, res) {
             }
         } else if (lang == "Java") {
             if (!input) {
-                var envData = { OS: "linux" };
+                var envData = { 
+                    OS: "linux",
+                    options: { 
+                        timeout: 10000,
+                        compileTimeout: 5000
+                    }
+                };
                 compiler.compileJava(envData, code, function (data) {
                     if (data.error) {
                         console.log("Java Compilation Error:", data.error);
@@ -72,7 +95,13 @@ app.post("/compile", function (req, res) {
                     }
                 });
             } else {
-                var envData = { OS: "linux" };
+                var envData = { 
+                    OS: "linux",
+                    options: { 
+                        timeout: 10000,
+                        compileTimeout: 5000
+                    }
+                };
                 compiler.compileJavaWithInput(envData, code, input, function (data) {
                     if (data.error) {
                         console.log("Java Compilation Error:", data.error);
@@ -86,7 +115,12 @@ app.post("/compile", function (req, res) {
             }
         } else if (lang == "Python") {
             if (!input) {
-                var envData = { OS: "linux" };
+                var envData = { 
+                    OS: "linux",
+                    options: { 
+                        timeout: 10000
+                    }
+                };
                 compiler.compilePython(envData, code, function (data) {
                     if (data.error) {
                         console.log("Python Execution Error:", data.error);
@@ -98,7 +132,12 @@ app.post("/compile", function (req, res) {
                     }
                 });
             } else {
-                var envData = { OS: "linux" };
+                var envData = { 
+                    OS: "linux",
+                    options: { 
+                        timeout: 10000
+                    }
+                };
                 compiler.compilePythonWithInput(envData, code, input, function (data) {
                     if (data.error) {
                         console.log("Python Execution Error:", data.error);
@@ -120,6 +159,6 @@ app.post("/compile", function (req, res) {
     }
 })
 
-app.listen(process.env.PORT ||8000, () => {
-    console.log("Server is running on port 8000");
+app.listen(process.env.PORT || 8000, () => {
+    console.log("Server is running on port", process.env.PORT || 8000);
 })

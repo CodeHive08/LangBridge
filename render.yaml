@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: langbridge
+    env: node
+    buildCommand: |
+      apt-get update
+      apt-get install -y g++ python3 openjdk-11-jdk
+      npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production 
