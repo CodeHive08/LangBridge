@@ -8,14 +8,35 @@ const options = {
     tempDir: path.join(__dirname, 'temp')
 }
 compiler.init(options)
-app.use(bodyP.json())
+
+// Configure body-parser with increased limits
+app.use(bodyP.json({ limit: '50mb' }));
+app.use(bodyP.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve static files
 app.use("/codemirror", express.static(path.join(__dirname, "codemirror")))
 
-// Add CORS middleware
+// Enhanced CORS middleware
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
     next();
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({
+        error: 'Internal Server Error',
+        message: err.message
+    });
 });
 
 app.get("/", function (req, res) {
@@ -26,12 +47,25 @@ app.get("/", function (req, res) {
 })
 
 app.post("/compile", function (req, res) {
+    // Add request logging
+    console.log('Received compilation request:', {
+        language: req.body.lang,
+        hasCode: !!req.body.code,
+        hasInput: !!req.body.input
+    });
+
     var code = req.body.code
     var input = req.body.input
     var lang = req.body.lang
 
     if (!code || !lang) {
-        return res.status(400).json({ error: "Code and language are required" });
+        return res.status(400).json({ 
+            error: "Code and language are required",
+            details: {
+                code: !code ? "Missing code" : null,
+                lang: !lang ? "Missing language" : null
+            }
+        });
     }
 
     try {
@@ -155,9 +189,18 @@ app.post("/compile", function (req, res) {
         }
     } catch (e) {
         console.error("Server Error:", e);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ 
+            error: "Internal server error",
+            message: e.message,
+            stack: process.env.NODE_ENV === 'development' ? e.stack : undefined
+        });
     }
 })
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
 
 app.listen(process.env.PORT || 8000, () => {
     console.log("Server is running on port", process.env.PORT || 8000);
