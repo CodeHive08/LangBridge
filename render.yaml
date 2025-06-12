@@ -3,23 +3,38 @@ services:
     name: langbridge
     env: node
     buildCommand: |
+      # Update package lists
       apt-get update
+      # Install required packages
       apt-get install -y g++ python3 openjdk-11-jdk
+      # Set up Java environment
+      export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+      export PATH=$PATH:$JAVA_HOME/bin
       # Verify installations
+      echo "G++ Version:"
       g++ --version
+      echo "Python Version:"
       python3 --version
+      echo "Java Version:"
       java -version
       # Set up temp directory with proper permissions
       mkdir -p /opt/render/project/src/temp
       chmod 777 /opt/render/project/src/temp
       # Install npm dependencies
       npm install
-    startCommand: npm start
+    startCommand: |
+      export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+      export PATH=$PATH:$JAVA_HOME/bin
+      npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: JAVA_HOME
+        value: /usr/lib/jvm/java-11-openjdk-amd64
+      - key: PATH
+        value: $PATH:/usr/lib/jvm/java-11-openjdk-amd64/bin
     disk:
       name: temp
       mountPath: /opt/render/project/src/temp

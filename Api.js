@@ -108,7 +108,8 @@ app.post("/api/run", function (req, res) {
                     options: { 
                         timeout: 10000,
                         compileTimeout: 5000,
-                        removeOldFiles: false
+                        removeOldFiles: false,
+                        compilePath: "/usr/bin/g++"
                     }
                 };
                 compiler.compileCPP(envData, code, function (data) {
@@ -129,7 +130,8 @@ app.post("/api/run", function (req, res) {
                     options: { 
                         timeout: 10000,
                         compileTimeout: 5000,
-                        removeOldFiles: false
+                        removeOldFiles: false,
+                        compilePath: "/usr/bin/g++"
                     }
                 };
                 compiler.compileCPPWithInput(envData, code, input, function (data) {
@@ -152,7 +154,9 @@ app.post("/api/run", function (req, res) {
                     options: { 
                         timeout: 10000,
                         compileTimeout: 5000,
-                        removeOldFiles: false
+                        removeOldFiles: false,
+                        compilePath: "/usr/bin/javac",
+                        runPath: "/usr/bin/java"
                     }
                 };
                 compiler.compileJava(envData, code, function (data) {
@@ -172,7 +176,9 @@ app.post("/api/run", function (req, res) {
                     options: { 
                         timeout: 10000,
                         compileTimeout: 5000,
-                        removeOldFiles: false
+                        removeOldFiles: false,
+                        compilePath: "/usr/bin/javac",
+                        runPath: "/usr/bin/java"
                     }
                 };
                 compiler.compileJavaWithInput(envData, code, input, function (data) {
@@ -254,6 +260,10 @@ app.get('/api/health', (req, res) => {
             path: tempDir,
             files: fs.existsSync(tempDir) ? fs.readdirSync(tempDir) : [],
             permissions: fs.existsSync(tempDir) ? fs.statSync(tempDir).mode.toString(8) : null
+        },
+        environment: {
+            JAVA_HOME: process.env.JAVA_HOME,
+            PATH: process.env.PATH
         }
     };
     res.status(200).json(health);
