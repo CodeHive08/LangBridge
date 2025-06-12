@@ -9,6 +9,9 @@ services:
       g++ --version
       python3 --version
       java -version
+      # Set up temp directory with proper permissions
+      mkdir -p /opt/render/project/src/temp
+      chmod 777 /opt/render/project/src/temp
       # Install npm dependencies
       npm install
     startCommand: npm start
@@ -19,5 +22,5 @@ services:
         value: "1"
     disk:
       name: temp
-      mountPath: /app/temp
+      mountPath: /opt/render/project/src/temp
       sizeGB: 1 

@@ -5,16 +5,24 @@ const compiler = require("compilex")
 const path = require("path")
 const fs = require("fs")
 
-// Ensure temp directory exists
-const tempDir = path.join(__dirname, 'temp')
+// Ensure temp directory exists with proper permissions
+const tempDir = '/opt/render/project/src/temp'
 if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true })
+    fs.mkdirSync(tempDir, { recursive: true, mode: 0o777 })
+}
+
+// Set directory permissions
+try {
+    fs.chmodSync(tempDir, 0o777)
+} catch (err) {
+    console.error('Error setting temp directory permissions:', err)
 }
 
 const options = { 
     stats: true,
     tempDir: tempDir,
-    removeOldFiles: false // Prevent automatic file deletion
+    removeOldFiles: false, // Prevent automatic file deletion
+    compileTimeout: 10000
 }
 
 // Initialize compiler with logging
@@ -244,7 +252,8 @@ app.get('/api/health', (req, res) => {
         tempDir: {
             exists: fs.existsSync(tempDir),
             path: tempDir,
-            files: fs.existsSync(tempDir) ? fs.readdirSync(tempDir) : []
+            files: fs.existsSync(tempDir) ? fs.readdirSync(tempDir) : [],
+            permissions: fs.existsSync(tempDir) ? fs.statSync(tempDir).mode.toString(8) : null
         }
     };
     res.status(200).json(health);
