@@ -13,7 +13,8 @@ if (!fs.existsSync(tempDir)) {
 
 const options = { 
     stats: true,
-    tempDir: tempDir
+    tempDir: tempDir,
+    removeOldFiles: false // Prevent automatic file deletion
 }
 
 // Initialize compiler with logging
@@ -52,9 +53,15 @@ app.use((err, req, res, next) => {
 });
 
 app.get("/", function (req, res) {
-    compiler.flush(function () {
-        console.log("Temporary files deleted")
-    })
+    // Only flush if there are files to delete
+    if (fs.existsSync(tempDir)) {
+        const files = fs.readdirSync(tempDir);
+        if (files.length > 0) {
+            compiler.flush(function () {
+                console.log("Temporary files deleted")
+            })
+        }
+    }
     res.sendFile(path.join(__dirname, "index.html"))
 })
 
@@ -92,7 +99,8 @@ app.post("/api/run", function (req, res) {
                     cmd: "g++",
                     options: { 
                         timeout: 10000,
-                        compileTimeout: 5000
+                        compileTimeout: 5000,
+                        removeOldFiles: false
                     }
                 };
                 compiler.compileCPP(envData, code, function (data) {
@@ -112,7 +120,8 @@ app.post("/api/run", function (req, res) {
                     cmd: "g++",
                     options: { 
                         timeout: 10000,
-                        compileTimeout: 5000
+                        compileTimeout: 5000,
+                        removeOldFiles: false
                     }
                 };
                 compiler.compileCPPWithInput(envData, code, input, function (data) {
@@ -134,7 +143,8 @@ app.post("/api/run", function (req, res) {
                     OS: "linux",
                     options: { 
                         timeout: 10000,
-                        compileTimeout: 5000
+                        compileTimeout: 5000,
+                        removeOldFiles: false
                     }
                 };
                 compiler.compileJava(envData, code, function (data) {
@@ -153,7 +163,8 @@ app.post("/api/run", function (req, res) {
                     OS: "linux",
                     options: { 
                         timeout: 10000,
-                        compileTimeout: 5000
+                        compileTimeout: 5000,
+                        removeOldFiles: false
                     }
                 };
                 compiler.compileJavaWithInput(envData, code, input, function (data) {
@@ -174,7 +185,8 @@ app.post("/api/run", function (req, res) {
                 var envData = { 
                     OS: "linux",
                     options: { 
-                        timeout: 10000
+                        timeout: 10000,
+                        removeOldFiles: false
                     }
                 };
                 compiler.compilePython(envData, code, function (data) {
@@ -192,7 +204,8 @@ app.post("/api/run", function (req, res) {
                 var envData = { 
                     OS: "linux",
                     options: { 
-                        timeout: 10000
+                        timeout: 10000,
+                        removeOldFiles: false
                     }
                 };
                 compiler.compilePythonWithInput(envData, code, input, function (data) {
@@ -230,7 +243,8 @@ app.get('/api/health', (req, res) => {
         uptime: process.uptime(),
         tempDir: {
             exists: fs.existsSync(tempDir),
-            path: tempDir
+            path: tempDir,
+            files: fs.existsSync(tempDir) ? fs.readdirSync(tempDir) : []
         }
     };
     res.status(200).json(health);
