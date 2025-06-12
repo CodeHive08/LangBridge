@@ -5,8 +5,19 @@ services:
     buildCommand: |
       apt-get update
       apt-get install -y g++ python3 openjdk-11-jdk
+      # Verify installations
+      g++ --version
+      python3 --version
+      java -version
+      # Install npm dependencies
       npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
-        value: production 
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: temp
+      mountPath: /app/temp
+      sizeGB: 1 

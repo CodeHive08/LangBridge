@@ -3,11 +3,23 @@ const app = express()
 const bodyP = require("body-parser")
 const compiler = require("compilex")
 const path = require("path")
+const fs = require("fs")
+
+// Ensure temp directory exists
+const tempDir = path.join(__dirname, 'temp')
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true })
+}
+
 const options = { 
     stats: true,
-    tempDir: path.join(__dirname, 'temp')
+    tempDir: tempDir
 }
+
+// Initialize compiler with logging
+console.log('Initializing compiler with options:', options)
 compiler.init(options)
+console.log('Compiler initialized successfully')
 
 // Configure body-parser with increased limits
 app.use(bodyP.json({ limit: '50mb' }));
@@ -51,7 +63,9 @@ app.post("/compile", function (req, res) {
     console.log('Received compilation request:', {
         language: req.body.lang,
         hasCode: !!req.body.code,
-        hasInput: !!req.body.input
+        hasInput: !!req.body.input,
+        codeLength: req.body.code ? req.body.code.length : 0,
+        inputLength: req.body.input ? req.body.input.length : 0
     });
 
     var code = req.body.code
@@ -59,6 +73,7 @@ app.post("/compile", function (req, res) {
     var lang = req.body.lang
 
     if (!code || !lang) {
+        console.log('Missing required fields:', { code: !!code, lang: !!lang });
         return res.status(400).json({ 
             error: "Code and language are required",
             details: {
@@ -70,6 +85,7 @@ app.post("/compile", function (req, res) {
 
     try {
         if (lang == "Cpp") {
+            console.log('Compiling C++ code');
             if (!input) {
                 var envData = { 
                     OS: "linux", 
@@ -80,6 +96,7 @@ app.post("/compile", function (req, res) {
                     }
                 };
                 compiler.compileCPP(envData, code, function (data) {
+                    console.log('C++ compilation result:', data);
                     if (data.error) {
                         console.log("C++ Compilation Error:", data.error);
                         res.json({ error: data.error });
@@ -99,6 +116,7 @@ app.post("/compile", function (req, res) {
                     }
                 };
                 compiler.compileCPPWithInput(envData, code, input, function (data) {
+                    console.log('C++ compilation with input result:', data);
                     if (data.error) {
                         console.log("C++ Compilation Error:", data.error);
                         res.json({ error: data.error });
@@ -110,6 +128,7 @@ app.post("/compile", function (req, res) {
                 });
             }
         } else if (lang == "Java") {
+            console.log('Compiling Java code');
             if (!input) {
                 var envData = { 
                     OS: "linux",
@@ -119,6 +138,7 @@ app.post("/compile", function (req, res) {
                     }
                 };
                 compiler.compileJava(envData, code, function (data) {
+                    console.log('Java compilation result:', data);
                     if (data.error) {
                         console.log("Java Compilation Error:", data.error);
                         res.json({ error: data.error });
@@ -137,6 +157,7 @@ app.post("/compile", function (req, res) {
                     }
                 };
                 compiler.compileJavaWithInput(envData, code, input, function (data) {
+                    console.log('Java compilation with input result:', data);
                     if (data.error) {
                         console.log("Java Compilation Error:", data.error);
                         res.json({ error: data.error });
@@ -148,6 +169,7 @@ app.post("/compile", function (req, res) {
                 });
             }
         } else if (lang == "Python") {
+            console.log('Executing Python code');
             if (!input) {
                 var envData = { 
                     OS: "linux",
@@ -156,6 +178,7 @@ app.post("/compile", function (req, res) {
                     }
                 };
                 compiler.compilePython(envData, code, function (data) {
+                    console.log('Python execution result:', data);
                     if (data.error) {
                         console.log("Python Execution Error:", data.error);
                         res.json({ error: data.error });
@@ -173,6 +196,7 @@ app.post("/compile", function (req, res) {
                     }
                 };
                 compiler.compilePythonWithInput(envData, code, input, function (data) {
+                    console.log('Python execution with input result:', data);
                     if (data.error) {
                         console.log("Python Execution Error:", data.error);
                         res.json({ error: data.error });
@@ -185,6 +209,7 @@ app.post("/compile", function (req, res) {
             }
         }  
         else {
+            console.log('Unsupported language:', lang);
             res.status(400).json({ error: "Unsupported language" });
         }
     } catch (e) {
@@ -197,11 +222,21 @@ app.post("/compile", function (req, res) {
     }
 })
 
-// Health check endpoint
+// Health check endpoint with more details
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
+    const health = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        tempDir: {
+            exists: fs.existsSync(tempDir),
+            path: tempDir
+        }
+    };
+    res.status(200).json(health);
 });
 
 app.listen(process.env.PORT || 8000, () => {
     console.log("Server is running on port", process.env.PORT || 8000);
+    console.log("Temp directory:", tempDir);
 })
