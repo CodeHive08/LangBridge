@@ -58,7 +58,7 @@ app.get("/", function (req, res) {
     res.sendFile(path.join(__dirname, "index.html"))
 })
 
-app.post("/compile", function (req, res) {
+app.post("/api/run", function (req, res) {
     // Add request logging
     console.log('Received compilation request:', {
         language: req.body.lang,
@@ -223,7 +223,7 @@ app.post("/compile", function (req, res) {
 })
 
 // Health check endpoint with more details
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
     const health = {
         status: 'ok',
         timestamp: new Date().toISOString(),

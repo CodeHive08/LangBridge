@@ -68,6 +68,11 @@
         .btn-success:disabled {
             background-color: #6c757d;
         }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -89,6 +94,7 @@
                 </div>
             </div>
             <textarea type="text" id="editor" class="form-control" aria-label="First name"></textarea>
+            <div id="error-message" class="error-message"></div>
         </div>
         <div class="col d-flex flex-column rounded bg-dark px-4">
             <div class="h-50">
@@ -114,6 +120,7 @@
         var input = document.getElementById("input")
         var output = document.getElementById("output")
         var run = document.getElementById("run")
+        var errorMessage = document.getElementById("error-message")
         editor.setSize(0.7 * width, "500")
         var option = document.getElementById("inlineFormSelectPref")
 
@@ -140,7 +147,7 @@
 
         run.addEventListener("click", async function() {
             try {
-              
+                errorMessage.textContent = '';
                 run.disabled = true;
                 const originalButtonText = run.innerHTML;
                 run.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...';
@@ -156,7 +163,9 @@
                     return;
                 }
 
-                const response = await fetch("http://localhost:8000/compile", {
+                // Get the current hostname and port
+                const baseUrl = window.location.origin;
+                const response = await fetch(`${baseUrl}/api/run`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -164,17 +173,24 @@
                     body: JSON.stringify(code)
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 
                 if (data.error) {
                     output.value = `Error: ${data.error}`;
+                    errorMessage.textContent = data.error;
                 } else if (data.output) {
                     output.value = data.output;
                 } else {
                     output.value = "No output received";
                 }
             } catch (error) {
+                console.error('Error:', error);
                 output.value = `Error: ${error.message}`;
+                errorMessage.textContent = `Failed to connect to the server. Please try again.`;
             } finally {
                 // Re-enable run button and restore original text
                 run.disabled = false;
