@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "compilex": "^0.7.4",
+    "express": "^4.21.2",
+    "nodemon": "^3.1.10"
+  },
+  "name": "compiler-project",
+  "version": "1.0.0",
+  "main": "Api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
